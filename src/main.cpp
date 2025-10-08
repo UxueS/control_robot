@@ -12,7 +12,7 @@ String comando = "";
 int ejeMin[6] = {0, 0, 0, 0, 0, 15};
 int ejeMax[6] = {180, 180, 180, 180, 180, 100};
 int posicionActual[6] = {90, 90, 90, 90, 90, 50};
-int offset[6] = {80, 80, 90, 90, 90, 50};
+int offset[6] = {120, 85, 90, 90, 90, 50};
 
 void Comando(String cmd);
 void Pinza(int estado);
@@ -23,14 +23,14 @@ void getPosicion();
 void setup()
 {
   Serial.begin(9600);
-  arm.begin(true);
-
   
   for (int i = 0; i < 6; i++) {
     arm.setJointCenter(i, offset[i]);
     arm.setJointMax(i, ejeMax[i]);
     arm.setJointMin(i, ejeMin[i]);
+    arm.setDelta(i, 1);
   }
+  arm.begin(true);
 
   Serial.println("Listo para recibir comandos (#p0*, #p1*, #m0-90*, #a90-80-70-100-90-50*, etc.)");
 }
@@ -44,10 +44,10 @@ void loop()
 
     if (c == '*')
     {
-     
-      if (comando.startsWith("#"))
+     int indexInicio = comando.indexOf('#');
+      if (indexInicio>=0)
       {
-        Comando(comando);
+        Comando(comando.substring(indexInicio));
       }
       else
       {
@@ -175,7 +175,7 @@ void MoverEje(int eje, int angulo)
 
   arm.setOneAbsolute(eje, angulo + offset[eje]);
   arm.update();
-  arm.safeDelay(4000);
+  arm.safeDelay(4000, 20);
   posicionActual[eje] = angulo;
   Serial.print(" -> Eje ");
   Serial.print(eje);
@@ -193,7 +193,7 @@ void MoverTodosLosEjes(int angulos[6])
   }
 
   arm.update();
-  arm.safeDelay(4000);
+  arm.safeDelay(4000, 20);
 
   Serial.println(" -> Movimiento de todos los ejes");
 
