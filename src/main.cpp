@@ -6,31 +6,33 @@ Braccio arm;
 #define PINZA_CERRADA 85
 #define PINZA_ABIERTA 20
 
-String comando = ""; // Guarda el texto recibido por el puerto serial
+String comando = ""; 
 
-// Límites de movimiento por eje
+
 int ejeMin[6] = {0, 0, 0, 0, 0, 15};
 int ejeMax[6] = {180, 180, 180, 180, 180, 100};
 int posicionActual[6] = {90, 90, 90, 90, 90, 50};
-int offset[6] = {0,80 ,90 , 90, 90, 50};
+int offset[6] = {80, 80, 90, 90, 90, 50};
 
 void Comando(String cmd);
 void Pinza(int estado);
 void MoverEje(int eje, int angulo);
+void MoverTodosLosEjes(int angulos[6]);
 void getPosicion();
+
 void setup()
 {
   Serial.begin(9600);
   arm.begin(true);
 
-  // Configurar límites de la pinza
-  for (int i = 0; i < 6; i++){
-  arm.setJointCenter(i, offset[i]);
-  arm.setJointMax(i, ejeMax[i]);
-  arm.setJointMin(i, ejeMin[i]);
   
-}
-  Serial.println("Listo para recibir comandos (#p0*, #p1*, #m0-90*, etc.)");
+  for (int i = 0; i < 6; i++) {
+    arm.setJointCenter(i, offset[i]);
+    arm.setJointMax(i, ejeMax[i]);
+    arm.setJointMin(i, ejeMin[i]);
+  }
+
+  Serial.println("Listo para recibir comandos (#p0*, #p1*, #m0-90*, #a90-80-70-100-90-50*, etc.)");
 }
 
 void loop()
@@ -42,7 +44,7 @@ void loop()
 
     if (c == '*')
     {
-      // Solo procesar si el comando empieza con '#'
+     
       if (comando.startsWith("#"))
       {
         Comando(comando);
@@ -51,7 +53,7 @@ void loop()
       {
         Serial.println(" -> Comando erróneo (debe comenzar con #)");
       }
-      comando = ""; // limpiar el buffer
+      comando = ""; 
     }
     else
     {
@@ -64,17 +66,17 @@ void Comando(String cmd)
 {
   cmd.trim();
 
-  // Verificar formato
+  
   if (!cmd.startsWith("#"))
   {
     Serial.println(" -> Comando erróneo (debe comenzar con #)");
     return;
   }
 
-  // Quitamos el '#'
+  
   cmd = cmd.substring(1);
 
-  // --- COMANDO DE PINZA ---
+  
   if (cmd.startsWith("p"))
   {
     char estadoChar = cmd.charAt(1);
@@ -87,12 +89,12 @@ void Comando(String cmd)
     {
       Serial.println(" -> Comando erróneo (pinza debe ser 0 o 1)");
     }
-
-    // --- COMANDO DE MOVER EJE ---
   }
+
+  
   else if (cmd.startsWith("m"))
   {
-    // Formato esperado: m<eje>-<angulo>
+    
     int separador = cmd.indexOf('-');
     if (separador > 1)
     {
@@ -105,6 +107,33 @@ void Comando(String cmd)
       Serial.println(" -> Comando erróneo (usa formato #m0-90*)");
     }
   }
+
+  
+  else if (cmd.startsWith("a"))
+  {
+    
+    cmd = cmd.substring(1); 
+
+    int angulos[6];
+    int lastIndex = 0;
+    for (int i = 0; i < 6; i++)
+    {
+      int nextIndex = cmd.indexOf('-', lastIndex);
+      if (nextIndex == -1 && i < 5)
+      {
+        Serial.println(" -> Comando erróneo (usa formato #a90-100-80-120-90-40*)");
+        return;
+      }
+
+      String valor = (nextIndex == -1) ? cmd.substring(lastIndex) : cmd.substring(lastIndex, nextIndex);
+      angulos[i] = valor.toInt();
+      lastIndex = nextIndex + 1;
+    }
+
+    MoverTodosLosEjes(angulos);
+  }
+
+
   else if (cmd.startsWith("g"))
   {
     getPosicion();
@@ -116,7 +145,6 @@ void Comando(String cmd)
   }
 }
 
-// --- FUNCIONES DE MOVIMIENTO ---
 
 void Pinza(int estado)
 {
@@ -145,7 +173,7 @@ void MoverEje(int eje, int angulo)
 
   angulo = constrain(angulo, ejeMin[eje], ejeMax[eje]);
 
-  arm.setOneAbsolute(eje, angulo+offset[eje]);
+  arm.setOneAbsolute(eje, angulo + offset[eje]);
   arm.update();
   arm.safeDelay(4000);
   posicionActual[eje] = angulo;
@@ -154,6 +182,23 @@ void MoverEje(int eje, int angulo)
   Serial.print(" movido a ");
   Serial.println(angulo);
 }
+
+void MoverTodosLosEjes(int angulos[6])
+{
+  for (int i = 0; i < 6; i++)
+  {
+    angulos[i] = constrain(angulos[i], ejeMin[i], ejeMax[i]);
+    arm.setOneAbsolute(i, angulos[i] + offset[i]);
+    posicionActual[i] = angulos[i];
+  }
+
+  arm.update();
+  arm.safeDelay(4000);
+
+  Serial.println(" -> Movimiento de todos los ejes");
+
+}
+
 void getPosicion()
 {
   Serial.println("\n--- Posición actual de los ejes ---");
