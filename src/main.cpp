@@ -12,8 +12,8 @@ String comando = "";
 int ejeMin[6] = {0, 0, 0, 0, 0, 15};
 int ejeMax[6] = {180, 180, 180, 180, 180, 100};
 int posicionActual[6] = {90, 90, 90, 90, 90, 50};
-int offset[6] = {120, 85, 90, 90, 90, 50};
-
+int offset[6] = {0, 81, 90, 90, 90, 50};
+int signo[6] = {-1, -1, -1, -1, -1, 1};
 void Comando(String cmd);
 void Pinza(int estado);
 void MoverEje(int eje, int angulo);
@@ -173,7 +173,7 @@ void MoverEje(int eje, int angulo)
 
   angulo = constrain(angulo, ejeMin[eje], ejeMax[eje]);
 
-  arm.setOneAbsolute(eje, angulo + offset[eje]);
+  arm.setOneAbsolute(eje, angulo*signo[eje] + offset[eje]);
   arm.update();
   arm.safeDelay(4000, 20);
   posicionActual[eje] = angulo;
@@ -188,7 +188,7 @@ void MoverTodosLosEjes(int angulos[6])
   for (int i = 0; i < 6; i++)
   {
     angulos[i] = constrain(angulos[i], ejeMin[i], ejeMax[i]);
-    arm.setOneAbsolute(i, angulos[i] + offset[i]);
+    arm.setOneAbsolute(i, signo[i]*angulos[i] + offset[i]);
     posicionActual[i] = angulos[i];
   }
 
@@ -201,14 +201,12 @@ void MoverTodosLosEjes(int angulos[6])
 
 void getPosicion()
 {
-  Serial.println("\n--- Posición actual de los ejes ---");
-  for (int i = 0; i < 6; i++)
+    Serial.print("Posicion de los ejes:" );
+
+      for (int i = 0; i < 6; i++)
   {
-    Serial.print("Eje ");
-    Serial.print(i);
-    Serial.print(": ");
+    Serial.print(" ");
     Serial.print(posicionActual[i]);
-    Serial.println("°");
   }
-  Serial.println("-------------------------------\n");
+    Serial.println("°");
 }
