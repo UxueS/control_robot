@@ -8,9 +8,8 @@ Braccio arm;
 
 String comando = ""; 
 
-
-int ejeMin[6] = {-30,0,0, 0, 0, 15};
-int ejeMax[6] = {180, 180, 180, 180, 180, 90};
+int ejeMin[6] = {-30, 0, 0, 0, 0, 15};
+int ejeMax[6] = {150, 180, 180, 180, 180, 90};
 int posicionActual[6] = {90, 90, 90, 90, 90, 50};
 int offset[6] = {120, 82, 91, 92, 98, 50};
 int signo[6] = {-1, -1, -1, -1, -1, 1};
@@ -32,7 +31,7 @@ void setup()
   }
   arm.begin(true);
 
-  Serial.println("Listo para recibir comandos (#p0*, #p1*, #m0-90*, #a90-80-70-100-90-50*, etc.)");
+  Serial.println("Listo para recibir comandos (#p0*, #p1*, #m0,90*, #a90,80,70,100,90,50*, etc.)");
 }
 
 void loop()
@@ -95,7 +94,7 @@ void Comando(String cmd)
   else if (cmd.startsWith("m"))
   {
     
-    int separador = cmd.indexOf('-');
+    int separador = cmd.indexOf(',');
     if (separador > 1)
     {
       int eje = cmd.substring(1, separador).toInt();
@@ -104,7 +103,7 @@ void Comando(String cmd)
     }
     else
     {
-      Serial.println(" -> Comando erróneo (usa formato #m0-90*)");
+      Serial.println(" -> Comando erróneo (usa formato #m0,90*)");
     }
   }
 
@@ -118,10 +117,10 @@ void Comando(String cmd)
     int lastIndex = 0;
     for (int i = 0; i < 6; i++)
     {
-      int nextIndex = cmd.indexOf('-', lastIndex);
+      int nextIndex = cmd.indexOf(',', lastIndex);
       if (nextIndex == -1 && i < 5)
       {
-        Serial.println(" -> Comando erróneo (usa formato #a90-100-80-120-90-40*)");
+        Serial.println(" -> Comando erróneo (usa formato #a90,100,80,120,90,40*)");
         return;
       }
 
