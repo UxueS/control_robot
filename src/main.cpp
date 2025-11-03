@@ -9,7 +9,7 @@ Braccio arm;
 String comando = ""; 
 
 
-int ejeMin[6] = {0,0,0, 0, 0, 15};
+int ejeMin[6] = {-30,0,0, 0, 0, 15};
 int ejeMax[6] = {180, 180, 180, 180, 180, 90};
 int posicionActual[6] = {90, 90, 90, 90, 90, 50};
 int offset[6] = {120, 82, 91, 92, 98, 50};
